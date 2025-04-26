@@ -2,10 +2,6 @@ name: Build and Release Bot
 
 on:
   push:
-    tags:
-      - 'v*'     # 推送 tag 触发发布
-    branches:
-      - main     # 或 main 分支推送也可以构建（不发布）
     paths-ignore:
       - '**.md'
       - '.gitignore'
@@ -125,7 +121,6 @@ jobs:
       id: version
       shell: bash
       run: |
-        # 匹配所有版本文件并取第一个有效值
         VERSION=$(cat ./artifacts/version-*/version.txt | head -n1)
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
