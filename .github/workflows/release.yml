@@ -73,19 +73,19 @@ jobs:
           chmod +x start.sh
         fi
 
-    - name: Compress folder
+    - name: Compress folder (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
       run: |
-        if [ "$RUNNER_OS" = "Windows" ]; then
-          cd app
-          Compress-Archive -Path @( 'app.js', 'node_modules', 'package.json' ) -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
-        elif [ "$RUNNER_OS" = "Linux" ]; then
-          cd app
-          zip -qr ../TelegramSafetyKeeper-linux.zip *
-        else
-          cd app
-          zip -qr ../TelegramSafetyKeeper-macos.zip *
-        fi
+        cd app
+        Compress-Archive -Path @( 'app.js', 'node_modules', 'package.json' ) -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
+
+    - name: Compress folder (Linux/macOS)
+      if: runner.os != 'Windows'
       shell: bash
+      run: |
+        cd app
+        zip -qr ../TelegramSafetyKeeper-${RUNNER_OS,,}.zip *
 
     - name: Save version info
       shell: bash
