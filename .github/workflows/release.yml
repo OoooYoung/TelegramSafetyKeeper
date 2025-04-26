@@ -106,6 +106,8 @@ jobs:
 
     - uses: softprops/action-gh-release@v2
       with:
+        tag_name: v${{ needs.build.outputs.version || steps.datetime.outputs.VERSION }}
+        name: "Release ${{ needs.build.outputs.version || steps.datetime.outputs.VERSION }}"
         files: |
           artifacts/TelegramSafetyKeeper-ubuntu-latest/TelegramSafetyKeeper-linux.zip
           artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip
