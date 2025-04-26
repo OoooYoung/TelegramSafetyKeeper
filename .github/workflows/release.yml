@@ -46,18 +46,19 @@ jobs:
       run: npm install
 
     - name: Prepare distribution
+      shell: bash
       run: |
         mkdir -p dist/app
-
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          for %f in (*.js) do copy "%f" dist\app\
-          copy package.json dist\app\
+          for f in (*.js); do cp "$f" dist/app/; done
+          cp package.json dist/app/
         else
           find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
           cp package.json dist/app/
         fi
 
     - name: Verify build
+      shell: bash
       run: |
         if [ ! -f dist/app/app.js ]; then
           echo "❌ Build failed - main file missing"
@@ -65,6 +66,7 @@ jobs:
         fi
 
     - name: Create start script
+      shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           echo "node app.js" > dist/start.bat
@@ -75,6 +77,7 @@ jobs:
         fi
 
     - name: Compress folder
+      shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
           powershell Compress-Archive -Path dist\* -DestinationPath TelegramSafetyKeeper-windows.zip -Force
