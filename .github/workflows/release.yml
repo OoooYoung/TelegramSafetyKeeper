@@ -37,11 +37,10 @@ jobs:
         cache: 'npm'
 
     - name: Install system dependencies
+      if: runner.os == 'macOS'
       run: |
-        if [[ "${{ runner.os }}" == "macOS" ]]; then
-          brew install pkg-config
-          npm install -g node-gyp
-        fi
+        brew install pkg-config
+        npm install -g node-gyp
 
     - name: Install dependencies
       run: npm install
@@ -61,7 +60,7 @@ jobs:
 
     - name: Create start script
       run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
           echo "node app.js" > dist/start.bat
         else
           echo "#!/bin/bash" > dist/start.sh
@@ -71,9 +70,9 @@ jobs:
 
     - name: Compress folder
       run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
           powershell Compress-Archive -Path dist\* -DestinationPath TelegramSafetyKeeper-windows.zip -Force
-        elif [[ "${{ runner.os }}" == "Linux" ]]; then
+        elif [[ "$RUNNER_OS" == "Linux" ]]; then
           zip -r TelegramSafetyKeeper-linux.zip dist
         else
           zip -r TelegramSafetyKeeper-macos.zip dist
@@ -82,7 +81,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: TelegramSafetyKeeper-${{ runner.os }}
+        name: TelegramSafetyKeeper-${{ matrix.os }}
         path: TelegramSafetyKeeper-*.zip
         retention-days: 1
 
@@ -100,5 +99,5 @@ jobs:
       with:
         files: |
           artifacts/TelegramSafetyKeeper-ubuntu-latest/TelegramSafetyKeeper-linux.zip
-          artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip 
+          artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip
           artifacts/TelegramSafetyKeeper-macos-latest/TelegramSafetyKeeper-macos.zip
