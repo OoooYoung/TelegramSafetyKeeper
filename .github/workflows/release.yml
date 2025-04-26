@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,6 +18,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
+        cache: 'npm'
 
     - name: Install dependencies
       run: npm install
@@ -24,15 +26,16 @@ jobs:
     - name: Download Node.exe
       run: |
         curl -LO https://nodejs.org/dist/v20.11.1/win-x64/node.exe
+        if (!(Test-Path node.exe)) { exit 1 }
         mkdir dist
         mv node.exe dist/
 
     - name: Copy files
       run: |
         mkdir dist/app
-        xcopy /E /I /Y .\*.js dist\app\
-        xcopy /E /I /Y .\node_modules dist\app\node_modules\
-        xcopy /E /I /Y .\package.json dist\app\
+        copy *.js dist\app\
+        robocopy node_modules dist\app\node_modules /E
+        copy package.json dist\app\
 
     - name: Create start script
       run: |
