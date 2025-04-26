@@ -74,16 +74,18 @@ jobs:
         fi
 
     - name: Compress folder
-      shell: bash
       run: |
-        cd app
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          cd app
           Compress-Archive -Path @( 'app.js', 'node_modules', 'package.json' ) -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
-        elif [[ "$RUNNER_OS" == "Linux" ]]; then
-          zip -r ../TelegramSafetyKeeper-linux.zip *
+        elif [ "$RUNNER_OS" = "Linux" ]; then
+          cd app
+          zip -qr ../TelegramSafetyKeeper-linux.zip *
         else
-          zip -r ../TelegramSafetyKeeper-macos.zip *
+          cd app
+          zip -qr ../TelegramSafetyKeeper-macos.zip *
         fi
+      shell: bash
 
     - name: Save version info
       shell: bash
