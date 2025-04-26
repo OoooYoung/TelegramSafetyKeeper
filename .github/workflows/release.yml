@@ -49,13 +49,9 @@ jobs:
       shell: bash
       run: |
         mkdir -p dist/app
+        cp -r node_modules dist/app/
         find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
         cp package.json dist/app/
-        
-        # 只有Windows复制node_modules
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          cp -r node_modules dist/app/
-        fi
 
     - name: Verify build
       shell: bash
@@ -87,11 +83,23 @@ jobs:
           zip -r TelegramSafetyKeeper-macos.zip dist
         fi
 
-    - name: Upload artifact
+    - name: Save version info
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "${VERSION}" > version.txt
+
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: TelegramSafetyKeeper-${{ matrix.os }}
         path: TelegramSafetyKeeper-*.zip
+        retention-days: 1
+
+    - name: Upload version artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: version
+        path: version.txt
         retention-days: 1
 
   release:
@@ -100,36 +108,59 @@ jobs:
     if: needs.build.result == 'success'
 
     steps:
-    - name: Get version
-      id: version
-      run: |
-        VERSION=$(node -p "require('./package.json').version || '$(date +%Y.%m.%d)'")
-        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-    - uses: actions/download-artifact@v4
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
       with:
         path: ./artifacts
 
-    - uses: softprops/action-gh-release@v2
+    - name: Read version
+      id: version
+      run: |
+        VERSION=$(cat artifacts/version/version.txt)
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+    - name: Get current datetime
+      id: datetime
+      run: |
+        echo "DATETIME=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+    - name: Get commit message
+      id: commit
+      run: |
+        echo "MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.version.outputs.version }}
         name: "Release v${{ steps.version.outputs.version }}"
         body: |
           ## TelegramSafetyKeeper 更新说明
-          
-          发布时间：${{ steps.datetime.outputs.DATETIME }}
-          发布者：${{ github.actor }}
-          
+
+          **版本号**: v${{ steps.version.outputs.version }}  
+          **发布时间**: ${{ steps.datetime.outputs.DATETIME }}  
+          **发布者**: ${{ github.actor }}  
+
           ### 更新内容
           ${{ steps.commit.outputs.MESSAGE }}
-          
+
           ### 支持平台
-          - Windows
-          - Linux
-          - macOS
-          
+          - **Windows/Linux/macOS**
+
           ### 下载说明
-          - Windows/Linux/macOS 用户请下载对应系统的 zip 文件
+          请根据您的系统下载对应的压缩包：
+          - Windows 用户: `TelegramSafetyKeeper-windows.zip`
+          - Linux 用户: `TelegramSafetyKeeper-linux.zip`
+          - macOS 用户: `TelegramSafetyKeeper-macos.zip`
+
+          ### 安装指南
+          1. 解压下载的压缩包
+          2. Windows: 双击 `start.bat`  
+             Linux/macOS: 终端运行 `./start.sh`
+
         files: |
           artifacts/TelegramSafetyKeeper-ubuntu-latest/TelegramSafetyKeeper-linux.zip
           artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip
