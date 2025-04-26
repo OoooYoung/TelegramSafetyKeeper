@@ -193,11 +193,11 @@ bot.start(async (ctx) => {
 
     // 发送欢迎消息
     const welcomeMsg = await bot.telegram.sendMessage(
-      record.chatId,
-      `新成员 <a href="tg://user?id=${userId}">${ctx.from.first_name}</a> 通过验证，欢迎入群！`,
+        record.chatId,
+        `新成员 <a href="tg://user?id=${userId}">${ctx.from.first_name}</a> 通过验证，欢迎入群！`,
         {
-            parse_mode: 'html'
-          }
+          parse_mode: 'html'
+        }
     );
 
     // 自动删除消息
@@ -243,9 +243,9 @@ setInterval(() => {
       await bot.telegram.unbanChatMember(record.chatId, userId);
 
       const outTimeMsg = await bot.telegram.sendMessage(
-      record.chatId,
-      `新成员 <a href="tg://user?id=${userId}">${record.name}</a> 超时未验证，已被移出群聊`,
-        {
+          record.chatId,
+          `新成员 <a href="tg://user?id=${userId}">${record.name}</a> 超时未验证，已被移出群聊`,
+          {
             parse_mode: 'html'
           }
       );
@@ -253,8 +253,8 @@ setInterval(() => {
       pendingVerifications.delete(userId)
 
       setTimeout(() => {
-      bot.telegram.deleteMessage(record.chatId, outTimeMsg.message_id).catch(() => {});
-    }, 30 * 1000);
+        bot.telegram.deleteMessage(record.chatId, outTimeMsg.message_id).catch(() => {});
+      }, 30 * 1000);
 
     }
   });
