@@ -156,14 +156,14 @@ jobs:
           ${{ steps.commit.outputs.message }}
           
           ### 支持平台
-          - **Windows**: 双击 start.bat 运行
-          - **Linux**: 执行 ./start.sh 运行
-          - **macOS**: 执行 ./start.sh 运行
+          - **Windows**
+          - **Linux**
+          - **macOS**
           
           ### 安装指南
           1. 下载对应平台的压缩包
-          2. 解压后直接运行启动脚本
+          2. 解压后运行 start.bat
         files: |
-          artifacts/TelegramSafetyKeeper-ubuntu-latest.zip
-          artifacts/TelegramSafetyKeeper-windows-latest.zip
-          artifacts/TelegramSafetyKeeper-macos-latest.zip
+          artifacts/TelegramSafetyKeeper-ubuntu.zip
+          artifacts/TelegramSafetyKeeper-windows.zip
+          artifacts/TelegramSafetyKeeper-macos.zip
