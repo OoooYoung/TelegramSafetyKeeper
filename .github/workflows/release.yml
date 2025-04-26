@@ -50,7 +50,7 @@ jobs:
       run: |
         mkdir -p dist/app
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          for f in (*.js); do cp "$f" dist/app/; done
+          for f in *.js; do cp "$f" dist/app/; done
           cp package.json dist/app/
         else
           find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
