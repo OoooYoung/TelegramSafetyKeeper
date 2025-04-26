@@ -2,10 +2,6 @@ name: Build and Release Bot
 
 on:
   push:
-    tags:
-      - 'v*'
-    branches:
-      - main
     paths-ignore:
       - '**.md'
       - '.gitignore'
