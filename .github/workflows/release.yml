@@ -3,9 +3,9 @@ name: Build and Release Bot
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'     # 推送 tag 触发发布
     branches:
-      - main
+      - main     # 或 main 分支推送也可以构建（不发布）
     paths-ignore:
       - '**.md'
       - '.gitignore'
@@ -38,6 +38,7 @@ jobs:
 
     - name: Install system dependencies
       if: runner.os == 'macOS'
+      shell: bash
       run: |
         brew install pkg-config
         npm install -g node-gyp
@@ -48,15 +49,15 @@ jobs:
     - name: Prepare distribution
       shell: bash
       run: |
-        mkdir -p dist/app
-        cp -r node_modules dist/app/
-        find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
-        cp package.json dist/app/
+        mkdir -p app
+        find . -maxdepth 1 -name '*.js' -exec cp {} app/ \;
+        cp package.json app/
+        cp -r node_modules app/  # 始终复制依赖
 
     - name: Verify build
       shell: bash
       run: |
-        if [ ! -f dist/app/app.js ]; then
+        if [ ! -f app/app.js ]; then
           echo "❌ Build failed - main file missing"
           exit 1
         fi
@@ -65,41 +66,43 @@ jobs:
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          echo "node app.js" > dist/start.bat
+          echo "node app.js" > start.bat
         else
-          echo "#!/bin/bash" > dist/start.sh
-          echo "node app.js" >> dist/start.sh
-          chmod +x dist/start.sh
+          echo "#!/bin/bash" > start.sh
+          echo "node app.js" >> start.sh
+          chmod +x start.sh
         fi
 
     - name: Compress folder
       shell: bash
       run: |
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          powershell Compress-Archive -Path dist\* -DestinationPath TelegramSafetyKeeper-windows.zip -Force
+          powershell Compress-Archive -Path * -DestinationPath TelegramSafetyKeeper-windows.zip -Force
         elif [[ "$RUNNER_OS" == "Linux" ]]; then
-          zip -r TelegramSafetyKeeper-linux.zip dist
+          zip -r TelegramSafetyKeeper-linux.zip
         else
-          zip -r TelegramSafetyKeeper-macos.zip dist
+          zip -r TelegramSafetyKeeper-macos.zip
         fi
 
     - name: Save version info
+      shell: bash
       run: |
+        mkdir -p artifacts/version
         VERSION=$(node -p "require('./package.json').version")
-        echo "${VERSION}" > version.txt
+        echo "${VERSION}" > artifacts/version/version.txt
 
-    - name: Upload build artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: TelegramSafetyKeeper-${{ matrix.os }}
         path: TelegramSafetyKeeper-*.zip
         retention-days: 1
 
-    - name: Upload version artifact
+    - name: Upload version file
       uses: actions/upload-artifact@v4
       with:
         name: version
-        path: version.txt
+        path: artifacts/version/version.txt
         retention-days: 1
 
   release:
@@ -111,56 +114,59 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Download artifacts
+    - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
 
     - name: Read version
       id: version
+      shell: bash
       run: |
-        VERSION=$(cat artifacts/version/version.txt)
+        VERSION=$(cat ./artifacts/version/version.txt)
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
     - name: Get current datetime
       id: datetime
+      shell: bash
       run: |
-        echo "DATETIME=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+        echo "datetime=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
 
-    - name: Get commit message
+    - name: Get latest commit message
       id: commit
+      shell: bash
       run: |
-        echo "MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+        echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
 
-    - name: Create Release
+    - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.version.outputs.version }}
-        name: "Release v${{ steps.version.outputs.version }}"
+        name: Release v${{ steps.version.outputs.version }}
         body: |
           ## TelegramSafetyKeeper 更新说明
-
-          **版本号**: v${{ steps.version.outputs.version }}  
-          **发布时间**: ${{ steps.datetime.outputs.DATETIME }}  
-          **发布者**: ${{ github.actor }}  
-
+          
+          **版本号**: v${{ steps.version.outputs.version }}
+          **发布时间**: ${{ steps.datetime.outputs.datetime }}
+          **发布者**: ${{ github.actor }}
+          
           ### 更新内容
-          ${{ steps.commit.outputs.MESSAGE }}
-
+          ${{ steps.commit.outputs.message }}
+          
           ### 支持平台
-          - **Windows/Linux/macOS**
-
+          - **Windows**: 包含完整依赖
+          - **Linux**: 包含完整依赖
+          - **macOS**: 包含完整依赖
+          
           ### 下载说明
-          请根据您的系统下载对应的压缩包：
-          - Windows 用户: `TelegramSafetyKeeper-windows.zip`
-          - Linux 用户: `TelegramSafetyKeeper-linux.zip`
-          - macOS 用户: `TelegramSafetyKeeper-macos.zip`
-
+          - Windows 用户: TelegramSafetyKeeper-windows.zip
+          - Linux 用户: TelegramSafetyKeeper-linux.zip
+          - macOS 用户: TelegramSafetyKeeper-macos.zip
+          
           ### 安装指南
           1. 解压下载的压缩包
-          2. Windows: 双击 `start.bat`  
-             Linux/macOS: 终端运行 `./start.sh`
-
+          2. Windows: 双击 start.bat
+             Linux/macOS: 终端运行 ./start.sh
         files: |
           artifacts/TelegramSafetyKeeper-ubuntu-latest/TelegramSafetyKeeper-linux.zip
           artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip
