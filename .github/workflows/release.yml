@@ -49,12 +49,12 @@ jobs:
       shell: bash
       run: |
         mkdir -p dist/app
+        find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
+        cp package.json dist/app/
+        
+        # 只有Windows复制node_modules
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          for f in *.js; do cp "$f" dist/app/; done
-          cp package.json dist/app/
-        else
-          find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
-          cp package.json dist/app/
+          cp -r node_modules dist/app/
         fi
 
     - name: Verify build
@@ -100,14 +100,36 @@ jobs:
     if: needs.build.result == 'success'
 
     steps:
+    - name: Get version
+      id: version
+      run: |
+        VERSION=$(node -p "require('./package.json').version || '$(date +%Y.%m.%d)'")
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
     - uses: actions/download-artifact@v4
       with:
         path: ./artifacts
 
     - uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ needs.build.outputs.version || steps.datetime.outputs.VERSION }}
-        name: "Release ${{ needs.build.outputs.version || steps.datetime.outputs.VERSION }}"
+        tag_name: v${{ steps.version.outputs.version }}
+        name: "Release v${{ steps.version.outputs.version }}"
+        body: |
+          ## TelegramSafetyKeeper 更新说明
+          
+          发布时间：${{ steps.datetime.outputs.DATETIME }}
+          发布者：${{ github.actor }}
+          
+          ### 更新内容
+          ${{ steps.commit.outputs.MESSAGE }}
+          
+          ### 支持平台
+          - Windows
+          - Linux
+          - macOS
+          
+          ### 下载说明
+          - Windows/Linux/macOS 用户请下载对应系统的 zip 文件
         files: |
           artifacts/TelegramSafetyKeeper-ubuntu-latest/TelegramSafetyKeeper-linux.zip
           artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip
