@@ -2,10 +2,6 @@ name: Build and Release Bot
 
 on:
   push:
-    tags:
-      - 'v*'     # 推送 tag 触发发布
-    branches:
-      - main     # 或 main 分支推送也可以构建（不发布）
     paths-ignore:
       - '**.md'
       - '.gitignore'
@@ -52,7 +48,7 @@ jobs:
         mkdir -p app
         find . -maxdepth 1 -name '*.js' -exec cp {} app/ \;
         cp package.json app/
-        cp -r node_modules app/  # 始终复制依赖
+        cp -r node_modules app/
 
     - name: Verify build
       shell: bash
@@ -153,17 +149,17 @@ jobs:
         body: |
           ## TelegramSafetyKeeper 更新说明
           
-          **版本号**: v${{ steps.version.outputs.version }}
-          **发布时间**: ${{ steps.datetime.outputs.datetime }}
-          **发布者**: ${{ github.actor }}
+          版本号: v${{ steps.version.outputs.version }}
+          发布时间: ${{ steps.datetime.outputs.datetime }}
+          发布者: ${{ github.actor }}
           
           ### 更新内容
           ${{ steps.commit.outputs.message }}
           
           ### 支持平台
-          - **Windows**: 包含完整依赖
-          - **Linux**: 包含完整依赖
-          - **macOS**: 包含完整依赖
+          - **Windows**
+          - **Linux**
+          - **macOS**
           
           ### 下载说明
           - Windows 用户: TelegramSafetyKeeper-windows.zip
