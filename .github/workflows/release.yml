@@ -78,7 +78,7 @@ jobs:
       run: |
         cd app
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          powershell Compress-Archive -Path * -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
+          powershell Compress-Archive -Path @( 'app.js', 'node_modules', 'package.json' ) -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
         elif [[ "$RUNNER_OS" == "Linux" ]]; then
           zip -r ../TelegramSafetyKeeper-linux.zip *
         else
