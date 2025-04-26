@@ -125,8 +125,7 @@ jobs:
       id: version
       shell: bash
       run: |
-        # 匹配所有操作系统的版本文件
-        VERSION=$(cat ./artifacts/version-*/version.txt | head -n1)
+        VERSION=$(cat ./artifacts/version.txt)
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
     - name: Get current datetime
