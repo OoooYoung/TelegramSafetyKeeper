@@ -27,7 +27,7 @@ function log(event, details = {}) {
   const time = moment().format('YYYY-MM-DD HH:mm:ss');
   const logEntry = `${time} [${event}] ${JSON.stringify(details.message)}\n`;
 
-  console.log(logEntry.trim()); // 控制台输出（去掉换行符）
+  console.log(logEntry.trim());
 
   // 返回 Promise，确保写入完成
   return new Promise((resolve, reject) => {
