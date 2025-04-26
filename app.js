@@ -20,6 +20,7 @@ BOT_TOKEN=你的BotToken
   console.log('已初始化.env文件');
   process.exit(0);
 }
+require('dotenv').config();
 
 // 日志记录函数
 function log(event, details = {}) {
@@ -41,7 +42,6 @@ function log(event, details = {}) {
   });
 }
 
-require('dotenv').config();
 const bot = new Telegraf(process.env.BOT_TOKEN); log('SYSTEM', { message: 'Bot initialized' });
 
 // 储存待验证信息
