@@ -3,9 +3,9 @@ name: Build and Release Bot
 on:
   push:
     tags:
-      - 'v*'     # 推送 tag 触发发布
+      - 'v*'
     branches:
-      - main     # 或 main 分支推送也可以构建（不发布）
+      - main
     paths-ignore:
       - '**.md'
       - '.gitignore'
@@ -119,7 +119,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
-        merge-multiple: true  # 合并所有构件到同一目录
+        merge-multiple: true
 
     - name: Read version
       id: version
