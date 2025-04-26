@@ -41,7 +41,6 @@ function log(event, details = {}) {
   });
 }
 
-
 require('dotenv').config();
 const bot = new Telegraf(process.env.BOT_TOKEN); log('SYSTEM', { message: 'Bot initialized' });
 
