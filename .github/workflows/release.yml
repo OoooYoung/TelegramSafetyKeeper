@@ -117,13 +117,6 @@ jobs:
         path: ./artifacts
         merge-multiple: true
 
-    - name: Read version
-      id: version
-      shell: bash
-      run: |
-        VERSION=$(cat ./artifacts/version-*/version.txt | head -n1)
-        echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
     - name: Get current datetime
       id: datetime
       shell: bash
