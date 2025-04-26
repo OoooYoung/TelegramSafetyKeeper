@@ -52,7 +52,7 @@ jobs:
         mkdir -p app
         find . -maxdepth 1 -name '*.js' -exec cp {} app/ \;
         cp package.json app/
-        cp -r node_modules app/  # 始终复制依赖
+        cp -r node_modules app/
 
     - name: Verify build
       shell: bash
@@ -77,26 +77,20 @@ jobs:
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        cd app
-        Compress-Archive -Path @( 'app.js', 'node_modules', 'package.json' ) -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
+        Compress-Archive -Path app, start.bat -DestinationPath TelegramSafetyKeeper-windows.zip -Force
 
     - name: Compress folder (Linux/macOS)
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        cd app
-        if [ "$RUNNER_OS" = "Linux" ]; then
-          zip -qr ../TelegramSafetyKeeper-linux.zip *
-        else
-          zip -qr ../TelegramSafetyKeeper-macos.zip *
-        fi
+        zip -qr TelegramSafetyKeeper-${{ runner.os }}.zip app start.sh
 
     - name: Save version info
       shell: bash
       run: |
-        mkdir -p artifacts/version
+        mkdir -p _version
         VERSION=$(node -p "require('./package.json').version")
-        echo "${VERSION}" > artifacts/version/version.txt
+        echo "${VERSION}" > _version/version.txt
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -109,7 +103,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: version-${{ matrix.os }}
-        path: artifacts/version/version.txt
+        path: _version/version.txt
         retention-days: 1
 
   release:
@@ -131,7 +125,8 @@ jobs:
       id: version
       shell: bash
       run: |
-        VERSION=$(cat ./artifacts/version/version.txt)
+        # 匹配所有版本文件并取第一个有效值
+        VERSION=$(cat ./artifacts/version-*/version.txt | head -n1)
         echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
     - name: Get current datetime
@@ -153,7 +148,6 @@ jobs:
         name: Release v${{ steps.version.outputs.version }}
         body: |
           ## TelegramSafetyKeeper 更新说明
-          
           **版本号**: v${{ steps.version.outputs.version }}
           **发布时间**: ${{ steps.datetime.outputs.datetime }}
           **发布者**: ${{ github.actor }}
@@ -162,20 +156,13 @@ jobs:
           ${{ steps.commit.outputs.message }}
           
           ### 支持平台
-          - **Windows**: 包含完整依赖
-          - **Linux**: 包含完整依赖
-          - **macOS**: 包含完整依赖
-          
-          ### 下载说明
-          - Windows 用户: TelegramSafetyKeeper-windows.zip
-          - Linux 用户: TelegramSafetyKeeper-linux.zip
-          - macOS 用户: TelegramSafetyKeeper-macos.zip
+          - Windows/Linux/MacOS
           
           ### 安装指南
-          1. 解压下载的压缩包
+          1. 解压对应平台的压缩包
           2. Windows: 双击 start.bat
-             Linux/macOS: 终端运行 ./start.sh
+             Linux/macOS: 执行 ./start.sh
         files: |
-          artifacts/TelegramSafetyKeeper-linux.zip
-          artifacts/TelegramSafetyKeeper-windows.zip
-          artifacts/TelegramSafetyKeeper-macos.zip
+          artifacts/TelegramSafetyKeeper-ubuntu-latest.zip
+          artifacts/TelegramSafetyKeeper-windows-latest.zip
+          artifacts/TelegramSafetyKeeper-macos-latest.zip
