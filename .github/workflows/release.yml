@@ -85,7 +85,11 @@ jobs:
       shell: bash
       run: |
         cd app
-        zip -qr ../TelegramSafetyKeeper-${RUNNER_OS,,}.zip *
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          zip -qr ../TelegramSafetyKeeper-linux.zip *
+        else
+          zip -qr ../TelegramSafetyKeeper-macos.zip *
+        fi
 
     - name: Save version info
       shell: bash
