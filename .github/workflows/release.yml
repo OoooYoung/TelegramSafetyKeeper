@@ -76,12 +76,13 @@ jobs:
     - name: Compress folder
       shell: bash
       run: |
+        cd app
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          powershell Compress-Archive -Path * -DestinationPath TelegramSafetyKeeper-windows.zip -Force
+          powershell Compress-Archive -Path * -DestinationPath ../TelegramSafetyKeeper-windows.zip -Force
         elif [[ "$RUNNER_OS" == "Linux" ]]; then
-          zip -r TelegramSafetyKeeper-linux.zip
+          zip -r ../TelegramSafetyKeeper-linux.zip *
         else
-          zip -r TelegramSafetyKeeper-macos.zip
+          zip -r ../TelegramSafetyKeeper-macos.zip *
         fi
 
     - name: Save version info
@@ -118,6 +119,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
+        merge-multiple: true
 
     - name: Read version
       id: version
@@ -168,6 +170,6 @@ jobs:
           2. Windows: 双击 start.bat
              Linux/macOS: 终端运行 ./start.sh
         files: |
-          artifacts/TelegramSafetyKeeper-ubuntu-latest/TelegramSafetyKeeper-linux.zip
-          artifacts/TelegramSafetyKeeper-windows-latest/TelegramSafetyKeeper-windows.zip
-          artifacts/TelegramSafetyKeeper-macos-latest/TelegramSafetyKeeper-macos.zip
+          artifacts/TelegramSafetyKeeper-linux.zip
+          artifacts/TelegramSafetyKeeper-windows.zip
+          artifacts/TelegramSafetyKeeper-macos.zip
