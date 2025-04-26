@@ -48,8 +48,14 @@ jobs:
     - name: Prepare distribution
       run: |
         mkdir -p dist/app
-        find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
-        cp package.json dist/app/
+
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          for %f in (*.js) do copy "%f" dist\app\
+          copy package.json dist\app\
+        else
+          find . -maxdepth 1 -name '*.js' -exec cp {} dist/app/ \;
+          cp package.json dist/app/
+        fi
 
     - name: Verify build
       run: |
