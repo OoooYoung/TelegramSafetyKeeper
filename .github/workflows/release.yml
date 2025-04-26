@@ -69,17 +69,28 @@ jobs:
           chmod +x start.sh
         fi
 
+    - name: Set platform name
+      id: platform
+      shell: bash
+      run: |
+        case "${{ matrix.os }}" in
+          ubuntu-latest) echo "platform=ubuntu" >> $GITHUB_OUTPUT ;;
+          windows-latest) echo "platform=windows" >> $GITHUB_OUTPUT ;;
+          macos-latest) echo "platform=macos" >> $GITHUB_OUTPUT ;;
+          *) echo "Unknown OS"; exit 1 ;;
+        esac
+
     - name: Compress folder (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
-        Compress-Archive -Path app, start.bat -DestinationPath TelegramSafetyKeeper-${{ matrix.os }}.zip -Force
+        Compress-Archive -Path app, start.bat -DestinationPath TelegramSafetyKeeper-${{ steps.platform.outputs.platform }}.zip -Force
 
     - name: Compress folder (Linux/macOS)
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        zip -qr TelegramSafetyKeeper-${{ matrix.os }}.zip app start.sh
+        zip -qr TelegramSafetyKeeper-${{ steps.platform.outputs.platform }}.zip app start.sh
 
     - name: Save version info
       shell: bash
@@ -91,7 +102,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: TelegramSafetyKeeper-${{ matrix.os }}
+        name: TelegramSafetyKeeper-${{ steps.platform.outputs.platform }}
         path: TelegramSafetyKeeper-*.zip
         retention-days: 1
 
@@ -144,9 +155,9 @@ jobs:
         body: |
           ## TelegramSafetyKeeper 更新说明
           
-          **版本号**: v${{ steps.version.outputs.version }}
-          **发布时间**: ${{ steps.datetime.outputs.datetime }}
-          **发布者**: ${{ github.actor }}
+          版本号: v${{ steps.version.outputs.version }}
+          发布时间: ${{ steps.datetime.outputs.datetime }}
+          发布者: ${{ github.actor }}
           
           ### 更新内容
           ${{ steps.commit.outputs.message }}
@@ -158,7 +169,7 @@ jobs:
           
           ### 安装指南
           1. 下载对应平台的压缩包
-          2. 解压后运行 start.bat
+          2. 解压后直接运行 start.bat
         files: |
           artifacts/TelegramSafetyKeeper-ubuntu.zip
           artifacts/TelegramSafetyKeeper-windows.zip
