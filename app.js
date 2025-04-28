@@ -139,24 +139,6 @@ bot.on('new_chat_members', async (ctx) => {
   }
 });
 
-// 新消息触发
-bot.on('message', async (ctx) => {
-  const message = ctx.message;
-
-  // 引用外部消息捕捉
-  if (message.quote) {
-    await MsgCleaner(ctx.chat.id, message.message_id)
-    const msg = await bot.telegram.sendMessage(
-        ctx.chat.id,
-        `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> 本群禁止引用外部频道消息！`,
-        {
-          parse_mode: 'html'
-        }
-    )
-    await timedMsgCleaner(ctx.chat.id, msg.message_id)
-  }
-});
-
 // 私聊验证
 bot.start(async (ctx) => {
   try {
@@ -246,6 +228,24 @@ bot.start(async (ctx) => {
       stack: err.stack
     });
     await ctx.reply('⚠️ 验证失败');
+  }
+});
+
+// 新消息触发
+bot.on('message', async (ctx) => {
+  const message = ctx.message;
+
+  // 引用外部消息捕捉
+  if (message.quote) {
+    await MsgCleaner(ctx.chat.id, message.message_id)
+    const msg = await bot.telegram.sendMessage(
+        ctx.chat.id,
+        `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> 本群禁止引用外部频道消息！`,
+        {
+          parse_mode: 'html'
+        }
+    )
+    await timedMsgCleaner(ctx.chat.id, msg.message_id)
   }
 });
 
