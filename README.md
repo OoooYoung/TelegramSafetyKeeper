@@ -8,6 +8,8 @@ __[Telegram交流群](https://t.me/oyDevelopersClub)__ | __[最新发布版](htt
 Focus on group entry verification/advertising detection
 
 ## Todo
-- [x] Join verification check
-- [ ] Sensitive word detection
-- [ ] Junk ads detection
+- [x] 🤖验证
+- [ ] 违禁词查杀
+- [ ] 反垃圾
+- [ ] 引用回复查杀
+- [ ] 反刷屏
