@@ -10,5 +10,4 @@ Focus on group entry verification/advertising detection
 ## Todo
 - [x] Join verification check
 - [ ] Sensitive word detection
-- [ ] reply advertisement check
 - [ ] Junk ads detection
