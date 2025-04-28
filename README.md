@@ -1,13 +1,14 @@
 ## GroupKeeper
 
-**交流群** [t.me/oyDevelopersClub](https://t.me/oyDevelopersClub)
+__[Telegram交流群](https://t.me/oyDevelopersClub)__ | __[最新发布版](https://github.com/OoooYoung/TelegramSafetyKeeper/releases/latest)__ | __[Telegram group](https://t.me/oyDevelopersClub)__ | __[Latest release](https://github.com/OoooYoung/TelegramSafetyKeeper/releases/latest)__
 
-最新发布版下载：https://github.com/OoooYoung/TelegramSafetyKeeper/releases/latest
+![Static Badge](https://img.shields.io/badge/Node-18.x-green?style=plastic)
 
-<a href="https://github.com/anuraghazra/github-readme-stats">
-  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=anuraghazra&repo=github-readme-stats" />
-</a>
-<a href="https://github.com/anuraghazra/convoychat">
-  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=anuraghazra&repo=convoychat" />
-</a>
+专注于入群验证/广告查杀  
+Focus on group entry verification/advertising detection
 
+## Todo
+- [x] Join verification check
+- [ ] Sensitive word detection
+- [ ] Quote reply advertisement check
+- [ ] Junk ads detection
