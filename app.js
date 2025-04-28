@@ -229,7 +229,6 @@ bot.start(async (ctx) => {
         }
     );
 
-    // 自动删除消息
     await timedMsgCleaner(record.chatId, welcomeMsg.message_id)
 
     await ctx.reply('✅ 验证成功！');
