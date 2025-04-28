@@ -11,9 +11,7 @@ if (!fs.existsSync('bot.log')) {
 // 初始化环境
 if (!fs.existsSync('.env')) {
   // 默认内容
-  const defaultEnvContent = `
-BOT_TOKEN=你的BotToken
-`;
+  const defaultEnvContent = `BOT_TOKEN=Token`;
 
   // 创建 .env 文件
   fs.writeFileSync('.env', defaultEnvContent, { encoding: 'utf8' });
@@ -25,11 +23,10 @@ require('dotenv').config();
 // 日志记录函数
 function log(event, details = {}) {
   const time = moment().format('YYYY-MM-DD HH:mm:ss');
-  const logEntry = `${time} [${event}] ${JSON.stringify(details.message)}\n`;
+  const logEntry = `${time} [${event}] ${JSON.stringify(details)}\n`;
 
   console.log(logEntry.trim());
 
-  // 返回 Promise，确保写入完成
   return new Promise((resolve, reject) => {
     fs.appendFile('bot.log', logEntry, (err) => {
       if (err) {
@@ -142,17 +139,49 @@ bot.on('new_chat_members', async (ctx) => {
   }
 });
 
+// 新消息触发
+bot.on('message', async (ctx) => {
+  const message = ctx.message;
+
+  // 引用外部消息捕捉
+  if (message.quote) {
+    await MsgCleaner(ctx.chat.id, message.message_id)
+    const msg = await bot.telegram.sendMessage(
+        ctx.chat.id,
+        `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> 本群禁止引用外部频道消息！`,
+        {
+          parse_mode: 'html'
+        }
+    )
+    await timedMsgCleaner(ctx.chat.id, msg.message_id)
+  }
+});
+
 // 私聊验证
 bot.start(async (ctx) => {
   try {
     const args = ctx.message.text.split(' ');
 
     const botName = (await bot.telegram.getMe()).first_name;
+    const botUserName = (await bot.telegram.getMe()).username;
 
     if (args.length < 2 || !args[1].startsWith('verify_')) {
-      log('UNKNOWN_START', { userId: ctx.from.id });
-      return ctx.reply(`👋 欢迎使用${botName}`);
+  await log('UNKNOWN_START', {userId: ctx.from.id});
+  return ctx.reply(
+    `👋 <b>欢迎使用${botName}</b>`,
+    {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '➕ 添加机器人到群组 ➕', url: `t.me/${botUserName}?startgroup=start` }
+          ]
+        ]
+      }
     }
+  );
+}
+
 
     const userId = parseInt(args[1].replace('verify_', ''), 10);
     const record = pendingVerifications.get(userId);
@@ -201,9 +230,7 @@ bot.start(async (ctx) => {
     );
 
     // 自动删除消息
-    setTimeout(() => {
-      bot.telegram.deleteMessage(record.chatId, welcomeMsg.message_id).catch(() => {});
-    }, 30 * 1000);
+    await timedMsgCleaner(record.chatId, welcomeMsg.message_id)
 
     await ctx.reply('✅ 验证成功！');
     pendingVerifications.delete(userId);
@@ -219,9 +246,24 @@ bot.start(async (ctx) => {
       error: err.message,
       stack: err.stack
     });
-    await ctx.reply('⚠️ 验证失败，请联系管理员。');
+    await ctx.reply('⚠️ 验证失败');
   }
 });
+
+// 消息清理
+async function timedMsgCleaner(chatId, message_id){
+  setTimeout(() => {
+      bot.telegram.deleteMessage(chatId, message_id).catch(() => {});
+    }, 30 * 1000);
+
+}
+
+async function MsgCleaner(chatId, message_id){
+  bot.telegram.deleteMessage(chatId, message_id).catch(() => {});
+  log('MESSAGE_CLEAN', {
+        chatId: chatId,
+        messageId: message_id});
+}
 
 // 清理过期验证信息
 setInterval(() => {
@@ -252,9 +294,7 @@ setInterval(() => {
 
       pendingVerifications.delete(userId)
 
-      setTimeout(() => {
-        bot.telegram.deleteMessage(record.chatId, outTimeMsg.message_id).catch(() => {});
-      }, 30 * 1000);
+      await timedMsgCleaner(record.chatId, outTimeMsg.message_id)
 
     }
   });
