@@ -9,7 +9,7 @@ Focus on group entry verification/advertising detection
 
 ## Todo
 - [x] 🤖验证
+- [x] 引用外部频道消息捕捉
 - [ ] 违禁词查杀
 - [ ] 反垃圾
-- [ ] 引用外部频道消息查杀
 - [ ] 反刷屏
