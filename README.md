@@ -11,5 +11,5 @@ Focus on group entry verification/advertising detection
 - [x] 🤖验证
 - [ ] 违禁词查杀
 - [ ] 反垃圾
-- [ ] 引用回复查杀
+- [ ] 引用外部频道消息查杀
 - [ ] 反刷屏
