@@ -145,7 +145,16 @@ jobs:
       id: commit
       shell: bash
       run: |
-        echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+        # 找出所有这次push中，改过app.js的commit message
+        MESSAGES=$(git log --pretty=format:"%s" -- app.js)
+
+        if [ -z "$MESSAGES" ]; then
+          echo "message=（本次提交未改动 app.js）" >> $GITHUB_OUTPUT
+        else
+          # 取最新改动app.js的commit message
+          LAST_MESSAGE=$(echo "$MESSAGES" | head -n 1)
+          echo "message=${LAST_MESSAGE}" >> $GITHUB_OUTPUT
+        fi
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
