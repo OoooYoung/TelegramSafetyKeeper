@@ -153,7 +153,7 @@ jobs:
         tag_name: v${{ steps.version.outputs.version }}
         name: Release v${{ steps.version.outputs.version }}
         body: |
-          ## TelegramSafetyKeeper 更新说明
+          ## GroupKeeper 更新说明
           
           版本号: v${{ steps.version.outputs.version }}
           发布时间: ${{ steps.datetime.outputs.datetime }}
