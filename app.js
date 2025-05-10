@@ -39,7 +39,8 @@ function log(event, details = {}) {
   });
 }
 
-const bot = new Telegraf(process.env.BOT_TOKEN); log('SYSTEM', { message: 'Bot initialized' });
+const bot = new Telegraf(process.env.BOT_TOKEN);
+log('SYSTEM', {message: 'Bot initialized'}).then(r => console.log(r));
 
 // 储存待验证信息
 const pendingVerifications = new Map();
@@ -51,7 +52,7 @@ async function isBotAdmin(ctx) {
     const member = await ctx.telegram.getChatMember(ctx.chat.id, botId);
     return ['administrator', 'creator'].includes(member.status);
   } catch (err) {
-    log('ERROR', {
+    await log('ERROR', {
       event: 'CHECK_BOT_ADMIN',
       error: err.message,
       stack: err.stack
@@ -73,20 +74,20 @@ bot.on('new_chat_members', async (ctx) => {
     for (const newMember of newMembers) {
       const userId = newMember.id;
 
-      log('NEW_MEMBER', {
+      await log('NEW_MEMBER', {
         userId,
         chatId,
         username: newMember.username,
-        firstName: newMember.first_name,
+        fullName: newMember.fullName,
         isBot: newMember.is_bot
       });
 
       // 过滤其他机器人
       if (newMember.is_bot) {
-        log('BOT_FILTERED', {
+        await log('BOT_FILTERED', {
           userId,
           chatId,
-          botName: newMember.first_name
+          botName: newMember.fullName
         });
         continue;
       }
@@ -98,20 +99,21 @@ bot.on('new_chat_members', async (ctx) => {
         }
       });
 
-      // 设置验证有效期（3分钟）
-      const expiresAt = Date.now() + 3 * 60 * 1000;
+      // 设置验证有效期
+      const expiresAt = Date.now() + 5 * 60 * 1000;
       const botUsername = (await bot.telegram.getMe()).username;
       const startUrl = `https://t.me/${botUsername}?start=verify_${userId}`;
 
       // 发送验证按钮并记录消息ID
       const msg = await ctx.reply(
-          `新成员 <a href="tg://user?id=${newMember.id}">${newMember.first_name}</a> 你好！\n
-你需要完成验证后才能解除限制，
-请在 <u>3</u> 分钟内完成验证，超时后将被移出群聊`,
+          `
+<a href="tg://user?id=${newMember.id}">${newMember.fullName}</a> 你好！\n
+你需要点击按钮完成验证后才能解除限制，
+请在 <u>5</u> 分钟内完成验证，超时后将被移出群聊`,
           {
-            parse_mode: 'html',
+            parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
-              Markup.button.url('🔐 点击验证', startUrl)
+              Markup.button.url('点击验证', startUrl)
             ])
           }
       );
@@ -120,10 +122,10 @@ bot.on('new_chat_members', async (ctx) => {
         chatId,
         expiresAt,
         messageId: msg.message_id,
-        name: newMember.first_name
+        name: newMember.fullName
       });
 
-      log('VERIFICATION_SENT', {
+      await log('VERIFICATION_SENT', {
         userId,
         chatId,
         messageId: msg.message_id,
@@ -131,7 +133,7 @@ bot.on('new_chat_members', async (ctx) => {
       });
     }
   } catch (err) {
-    log('ERROR', {
+    await log('ERROR', {
       event: 'NEW_MEMBER_HANDLING',
       error: err.message,
       stack: err.stack
@@ -156,7 +158,10 @@ bot.start(async (ctx) => {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: '➕ 添加机器人到群组 ➕', url: `t.me/${botUserName}?startgroup=start` }
+            {
+              text: '➕ 添加机器人到群组 ➕',
+              url: `https://t.me/${botUserName}?startgroup&admin=
+              post_messages+change_info+pin_messages+restrict_members+delete_messages+invite_users` }
           ]
         ]
       }
@@ -168,18 +173,18 @@ bot.start(async (ctx) => {
     const userId = parseInt(args[1].replace('verify_', ''), 10);
     const record = pendingVerifications.get(userId);
 
-    log('VERIFICATION_STARTED', {
+    await log('VERIFICATION_STARTED', {
       userId,
       requesterId: ctx.from.id
     });
 
     if (!record) {
-      log('VERIFICATION_INVALID', { userId });
+      await log('VERIFICATION_INVALID', {userId});
       return ctx.reply('⌛️ 验证已过期');
     }
 
     if (ctx.from.id !== userId) {
-      log('VERIFICATION_MISMATCH', {
+      await log('VERIFICATION_MISMATCH', {
         expected: userId,
         actual: ctx.from.id
       });
@@ -188,7 +193,7 @@ bot.start(async (ctx) => {
 
     if (Date.now() > record.expiresAt) {
       pendingVerifications.delete(userId);
-      log('VERIFICATION_EXPIRED', { userId });
+      await log('VERIFICATION_EXPIRED', {userId});
       return ctx.reply('⌛️ 验证已过期');
     }
 
@@ -205,9 +210,9 @@ bot.start(async (ctx) => {
     // 发送欢迎消息
     const welcomeMsg = await bot.telegram.sendMessage(
         record.chatId,
-        `新成员 <a href="tg://user?id=${userId}">${ctx.from.first_name}</a> 通过验证，欢迎入群！`,
+        `<a href="tg://user?id=${userId}">${ctx.from.fullName}</a> 通过了验证，欢迎入群！`,
         {
-          parse_mode: 'html'
+          parse_mode: 'HTML'
         }
     );
 
@@ -216,13 +221,13 @@ bot.start(async (ctx) => {
     await ctx.reply('✅ 验证成功！');
     pendingVerifications.delete(userId);
 
-    log('VERIFICATION_SUCCESS', {
+    await log('VERIFICATION_SUCCESS', {
       userId,
       chatId: record.chatId
     });
 
   } catch (err) {
-    log('ERROR', {
+    await log('ERROR', {
       event: 'VERIFICATION_PROCESS',
       error: err.message,
       stack: err.stack
@@ -240,9 +245,9 @@ bot.on('message', async (ctx) => {
     await MsgCleaner(ctx.chat.id, message.message_id)
     const msg = await bot.telegram.sendMessage(
         ctx.chat.id,
-        `<a href="tg://user?id=${ctx.from.id}">${ctx.from.first_name}</a> 本群禁止引用外部频道消息！`,
+        `<a href="tg://user?id=${ctx.from.id}">${ctx.from.fullName}</a> 本群禁止引用外部频道消息！`,
         {
-          parse_mode: 'html'
+          parse_mode: 'HTML'
         }
     )
     await timedMsgCleaner(ctx.chat.id, msg.message_id)
@@ -259,9 +264,10 @@ async function timedMsgCleaner(chatId, message_id){
 
 async function MsgCleaner(chatId, message_id){
   bot.telegram.deleteMessage(chatId, message_id).catch(() => {});
-  log('MESSAGE_CLEAN', {
-        chatId: chatId,
-        messageId: message_id});
+  await log('MESSAGE_CLEAN', {
+    chatId: chatId,
+    messageId: message_id
+  });
 }
 
 // 清理过期验证信息
@@ -269,7 +275,7 @@ setInterval(() => {
   const now = Date.now();
   pendingVerifications.forEach(async (record, userId) => {
     if (now > record.expiresAt) {
-      log('VERIFICATION_CLEANUP', {
+      await log('VERIFICATION_CLEANUP', {
         userId,
         chatId: record.chatId,
         messageId: record.messageId,
@@ -285,9 +291,9 @@ setInterval(() => {
 
       const outTimeMsg = await bot.telegram.sendMessage(
           record.chatId,
-          `新成员 <a href="tg://user?id=${userId}">${record.name}</a> 超时未验证，已被移出群聊`,
+          `<a href="tg://user?id=${userId}">${record.name}</a> 超时未验证，已被移出群聊`,
           {
-            parse_mode: 'html'
+            parse_mode: 'HTML'
           }
       );
 
@@ -305,7 +311,7 @@ bot.catch((err) => {
     event: 'BOT_ERROR',
     error: err.message,
     stack: err.stack
-  });
+  }).then(r => console.log(r));
 });
 
 // 启动 bot
@@ -315,7 +321,7 @@ bot.launch().then(() => {
     event: 'BOT_LAUNCH',
     error: err.message,
     stack: err.stack
-  });
+  }).then(r => console.log(r));
 });
 
 process.on('SIGINT', async () => {

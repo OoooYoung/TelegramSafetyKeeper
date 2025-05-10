@@ -13,3 +13,5 @@ Focus on group entry verification/advertising detection
 - [ ] 违禁词查杀
 - [ ] 反垃圾
 - [ ] 反刷屏
+
+提建议，提反馈，需要定制，前往👉 __[交流群](https://t.me/oyDevelopersClub)__
